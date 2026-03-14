@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esteira de Envolvimentos</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0e0f13;--surface:#16181f;--surface2:#1e2029;--surface3:#252733;
+    --border:#2e3140;--border2:#3a3d52;--text:#e8eaf0;--text2:#9499b0;--text3:#5c6080;
+    --accent:#4f6ef7;--accent2:#7c94fa;--green:#2dd4a0;--yellow:#f5c542;
+    --red:#f75a5a;--orange:#f7924f;--purple:#a78bfa;
+    --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+  .app{display:flex;flex-direction:column;height:100vh;}
+
+  /* TOPBAR */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+  .logo{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.05em;display:flex;align-items:center;gap:10px;}
+  .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent);}
+  .topbar-nav{display:flex;gap:4px;}
+  .nav-btn{padding:6px 14px;border-radius:6px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--text2);background:transparent;border:none;cursor:pointer;transition:all .15s;}
+  .nav-btn:hover{color:var(--text);background:var(--surface2);}
+  .nav-btn.active{color:var(--text);background:var(--surface3);}
+  .topbar-right{display:flex;align-items:center;gap:12px;}
+  .avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;cursor:pointer;}
+  .btn-new{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
+  .btn-new:hover{background:var(--accent2);transform:translateY(-1px);}
+
+  .content{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+  .screen{display:none;flex:1;overflow:hidden;flex-direction:column;}
+  .screen.active{display:flex;}
+
+  /* ESTEIRA */
+  .esteira-header{padding:16px 24px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .esteira-title{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;}
+  .filters{display:flex;gap:8px;align-items:center;}
+  .filter-chip{padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text2);background:transparent;cursor:pointer;transition:all .15s;font-family:var(--sans);}
+  .filter-chip:hover,.filter-chip.on{border-color:var(--accent);color:var(--accent2);background:rgba(79,110,247,.1);}
+
+  .kanban-wrap{flex:1;overflow-x:auto;overflow-y:hidden;padding:14px 24px 24px;display:flex;gap:10px;}
+  .lane{flex-shrink:0;width:210px;display:flex;flex-direction:column;gap:8px;}
+  .lane-header{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);}
+  .lane-label{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);}
+  .lane-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .lane-count{font-family:var(--mono);font-size:10px;color:var(--text3);background:var(--surface3);padding:1px 6px;border-radius:10px;}
+  .lane-cards{display:flex;flex-direction:column;gap:8px;flex:1;overflow-y:auto;padding-bottom:4px;}
+  .lane-cards::-webkit-scrollbar{width:3px;}
+  .lane-cards::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+  /* CARD */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 10px 10px 13px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;}
+  .card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:10px 0 0 10px;}
+  .card.pri-alta::before{background:var(--red);}
+  .card.pri-media::before{background:var(--yellow);}
+  .card.pri-baixa::before{background:var(--green);}
+  .card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  .card.sla-urgente{border-color:rgba(247,90,90,.35);}
+  .card-id{font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:4px;}
+  .card-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:7px;}
+  .card-meta{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+  .badge{font-family:var(--mono);font-size:10px;font-weight:500;padding:2px 6px;border-radius:4px;letter-spacing:.04em;}
+  .badge-size{background:rgba(167,139,250,.15);color:var(--purple);}
+  .badge-team{background:rgba(79,110,247,.12);color:var(--accent2);}
+  .card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:7px;border-top:1px solid var(--border);}
+  .card-sla{font-family:var(--mono);font-size:10px;}
+  .sla-ok{color:var(--green);}
+  .sla-warn{color:var(--yellow);}
+  .sla-over{color:var(--red);}
+  .card-prs{font-family:var(--mono);font-size:10px;color:var(--text3);}
+
+  /* DETAIL */
+  .detail-wrap{flex:1;overflow-y:auto;padding:20px 24px 24px;display:flex;gap:20px;}
+  .detail-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;}
+  .detail-side{width:262px;flex-shrink:0;display:flex;flex-direction:column;gap:11px;}
+  .detail-back{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;padding:0;transition:color .15s;margin-bottom:2px;}
+  .detail-back:hover{color:var(--text2);}
+  .detail-head{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+  .detail-id{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:6px;}
+  .detail-title-text{font-size:18px;font-weight:600;color:var(--text);margin-bottom:12px;line-height:1.3;}
+  .detail-badges{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+
+  .status-badge{font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;letter-spacing:.05em;}
+  .st-rascunho       {background:rgba(92,96,128,.2);   color:var(--text3);}
+  .st-ag-aprovacao   {background:rgba(247,146,79,.15);  color:var(--orange);}
+  .st-em-analise     {background:rgba(245,197,66,.15);  color:var(--yellow);}
+  .st-aprovado       {background:rgba(45,212,160,.15);  color:var(--green);}
+  .st-em-dev         {background:rgba(79,110,247,.15);  color:var(--accent2);}
+  .st-ag-rev-pr      {background:rgba(245,197,66,.12);  color:var(--yellow);}
+  .st-em-rev-pr      {background:rgba(245,197,66,.22);  color:var(--yellow);}
+  .st-ag-homolog     {background:rgba(167,139,250,.12); color:var(--purple);}
+  .st-em-homolog     {background:rgba(167,139,250,.22); color:var(--purple);}
+  .st-ag-implantacao {background:rgba(45,212,160,.12);  color:var(--green);}
+  .st-implantado     {background:rgba(45,212,160,.08);  color:#1a9a74;}
+  .st-cancelado      {background:rgba(247,90,90,.12);   color:var(--red);}
+
+  .section-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;}
+  .section-label{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;}
+  .desc-text{font-size:13px;color:var(--text2);line-height:1.7;}
+
+  /* PR LIST */
+  .pr-item{display:flex;align-items:center;gap:10px;padding:9px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:7px;cursor:pointer;transition:all .15s;}
+  .pr-item:hover{border-color:var(--accent);}
+  .pr-item:last-child{margin-bottom:0;}
+  .pr-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .pr-dot-aberto   {background:var(--green);box-shadow:0 0 5px var(--green);}
+  .pr-dot-revisao  {background:var(--yellow);box-shadow:0 0 5px var(--yellow);}
+  .pr-dot-ajustes  {background:var(--orange);}
+  .pr-dot-aprovado {background:var(--accent2);}
+  .pr-dot-merged   {background:var(--purple);}
+  .pr-dot-rejeitado{background:var(--red);}
+  .pr-info{flex:1;min-width:0;}
+  .pr-repo{font-family:var(--mono);font-size:10px;color:var(--text3);}
+  .pr-desc{font-size:12px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pr-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
+  .pr-status-tag{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:.04em;}
+  .pr-st-aberto   {background:rgba(45,212,160,.12);  color:var(--green);}
+  .pr-st-revisao  {background:rgba(245,197,66,.12);  color:var(--yellow);}
+  .pr-st-ajustes  {background:rgba(247,146,79,.12);  color:var(--orange);}
+  .pr-st-aprovado {background:rgba(79,110,247,.12);  color:var(--accent2);}
+  .pr-st-merged   {background:rgba(167,139,250,.15); color:var(--purple);}
+  .pr-st-rejeitado{background:rgba(247,90,90,.12);   color:var(--red);}
+  .pr-codigo{font-family:var(--mono);font-size:9px;color:var(--text3);}
+
+  /* TIMELINE */
+  .timeline{display:flex;flex-direction:column;}
+  .tl-item{display:flex;gap:12px;position:relative;}
+  .tl-item:not(:last-child) .tl-line{position:absolute;left:7px;top:18px;bottom:-4px;width:1px;background:var(--border);}
+  .tl-dot-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0;padding-top:3px;position:relative;}
+  .tl-dot{width:15px;height:15px;border-radius:50%;border:2px solid;background:var(--bg);flex-shrink:0;}
+  .tl-dot-done   {border-color:var(--green);background:rgba(45,212,160,.15);}
+  .tl-dot-current{border-color:var(--accent);background:rgba(79,110,247,.2);box-shadow:0 0 8px rgba(79,110,247,.5);}
+  .tl-dot-pending{border-color:var(--border2);}
+  .tl-content{padding-bottom:13px;flex:1;}
+  .tl-status{font-size:13px;font-weight:500;color:var(--text);}
+  .tl-meta{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px;}
+  .tl-obs{font-size:12px;color:var(--text2);margin-top:5px;background:var(--surface2);padding:7px 9px;border-radius:6px;border-left:2px solid var(--border2);line-height:1.5;}
+
+  /* SIDE */
+  .info-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;}
+  .info-row{display:flex;flex-direction:column;gap:2px;margin-bottom:10px;}
+  .info-row:last-child{margin-bottom:0;}
+  .info-key{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;}
+  .info-val{font-size:13px;color:var(--text);font-weight:500;}
+  .info-val.accent{color:var(--accent2);}
+  .sla-meter{margin-top:6px;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;}
+  .sla-fill{height:100%;border-radius:2px;}
+  .sla-green-fill {background:var(--green);}
+  .sla-yellow-fill{background:var(--yellow);}
+  .sla-red-fill   {background:var(--red);}
+
+  /* ACTIONS */
+  .action-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn-action{padding:7px 13px;border-radius:7px;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;border:1px solid;transition:all .15s;}
+  .btn-approve {background:rgba(45,212,160,.1); border-color:rgba(45,212,160,.3); color:var(--green);}
+  .btn-approve:hover{background:rgba(45,212,160,.2);}
+  .btn-request {background:rgba(245,197,66,.1); border-color:rgba(245,197,66,.3); color:var(--yellow);}
+  .btn-request:hover{background:rgba(245,197,66,.2);}
+  .btn-cancel-act{background:rgba(247,90,90,.1);border-color:rgba(247,90,90,.25);color:var(--red);}
+  .btn-cancel-act:hover{background:rgba(247,90,90,.2);}
+  .btn-info{background:rgba(79,110,247,.1);border-color:rgba(79,110,247,.3);color:var(--accent2);}
+  .btn-info:hover{background:rgba(79,110,247,.2);}
+
+  /* RELEASES */
+  .releases-wrap{flex:1;overflow-y:auto;padding:16px 24px 24px;}
+  .releases-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+  .release-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:17px 19px;cursor:pointer;transition:all .18s;}
+  .release-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.35);}
+  .release-ver{font-family:var(--mono);font-size:16px;font-weight:600;color:var(--accent2);margin-bottom:4px;}
+  .release-date{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:13px;}
+  .release-envs{display:flex;flex-direction:column;gap:5px;margin-bottom:13px;}
+  .release-env-item{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;}
+  .release-env-item::before{content:'';width:3px;height:3px;background:var(--border2);border-radius:50%;flex-shrink:0;}
+  .release-status{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 9px;border-radius:5px;letter-spacing:.04em;}
+  .rs-homolog   {background:rgba(167,139,250,.15);color:var(--purple);}
+  .rs-planejada {background:rgba(79,110,247,.15); color:var(--accent2);}
+  .rs-implantada{background:rgba(45,212,160,.12); color:var(--green);}
+
+  .page-header{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .page-title{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;}
+
+  /* MODALS */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:580px;max-width:96vw;max-height:92vh;overflow-y:auto;padding:26px;animation:slideUp .2s ease;}
+  .modal.modal-sm{width:460px;}
+  @keyframes slideUp{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .modal-title{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text);letter-spacing:.06em;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;}
+  .modal-close{background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;line-height:1;transition:color .15s;}
+  .modal-close:hover{color:var(--text);}
+  .form-group{margin-bottom:14px;}
+  .form-label{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:6px;}
+  .form-input,.form-textarea,.form-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .15s;appearance:none;}
+  .form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--accent);}
+  .form-textarea{resize:vertical;min-height:78px;line-height:1.6;}
+  .form-row{display:flex;gap:12px;}
+  .form-row .form-group{flex:1;}
+  .char-count{font-family:var(--mono);font-size:10px;color:var(--text3);text-align:right;margin-top:4px;}
+  .form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
+  .btn-cancel-form{padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .15s;}
+  .btn-cancel-form:hover{border-color:var(--border2);color:var(--text);}
+  .btn-submit{padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
+  .btn-submit:hover{background:var(--accent2);}
+  .btn-submit.green{background:rgba(45,212,160,.8);}
+  .btn-submit.green:hover{background:var(--green);}
+  .btn-submit.ghost{background:transparent;border:1px solid var(--border);color:var(--text2);}
+  .btn-submit.ghost:hover{border-color:var(--border2);color:var(--text);}
+
+  .divider{height:1px;background:var(--border);margin:14px 0;}
+
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:5px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo"><div class="logo-dot"></div>ENVOLVIMENTOS</div>
+    <div class="topbar-nav">
+      <button class="nav-btn active" onclick="showScreen('esteira')">Esteira</button>
+      <button class="nav-btn" onclick="showScreen('releases')">Releases</button>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-new" onclick="openModal('novo-env')"><span style="font-size:16px;line-height:1">+</span> Novo Envolvimento</button>
+      <div class="avatar">JM</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ════════════════ ESTEIRA -->
+    <div class="screen active" id="screen-esteira">
+      <div class="esteira-header">
+        <span class="esteira-title">Esteira de Envolvimentos</span>
+        <div class="filters">
+          <button class="filter-chip on" onclick="toggleFilter(this)">Todos</button>
+          <button class="filter-chip" onclick="toggleFilter(this)">Time Pagamentos</button>
+          <button class="filter-chip" onclick="toggleFilter(this)">Time Crédito</button>
+          <button class="filter-chip" onclick="toggleFilter(this)">Alta Prioridade</button>
+        </div>
+      </div>
+      <div class="kanban-wrap">
+
+        <div class="lane">
+          <div class="lane-header"><div class="lane-label"><div class="lane-dot" style="background:var(--text3)"></div>Rascunho</div><span class="lane-count">1</span></div>
+          <div class="lane-cards">
+            <div class="card pri-baixa" onclick="showDetail()">
+              <div class="card-id">#ENV-043</div>
+              <div class="card-title">Novo relatório de inadimplência por produto</div>
+              <div class="card-meta"><span class="badge badge-size">M</span><span class="badge badge-team">Risco</span></div>
+              <div class="card-footer"><span class="card-sla" style="color:var(--text3)">Rascunho</span><span class="card-prs">— PRs</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lane">
+          <div class="lane-header"><div class="lane-label"><div class="lane-dot" style="background:var(--orange)"></div>Ag. Aprovação</div><span class="lane-count">2</span></div>
+          <div class="lane-cards">
+            <div class="card pri-alta sla-urgente" onclick="showDetail()">
+              <div class="card-id">#ENV-041</div>
+              <div class="card-title">Novo campo "data vencimento" no produto Cartão</div>
+              <div class="card-meta"><span class="badge badge-size">G</span><span class="badge badge-team">Cartões</span></div>
+              <div class="card-footer"><span class="card-sla sla-over">⚠ SLA vencido (3d 4h)</span><span class="card-prs">— PRs</span></div>
+            </div>
+            <div class="card pri-media" onclick="showDetail()">
+              <div class="card-id">#ENV-042</div>
+              <div class="card-title">Ajuste no consumer Kafka de notificações</div>
+              <div class="card-meta"><span class="badge badge-size">P</span><span class="badge badge-team">Notificações</span></div>
+              <div class="card-footer"><span class="card-sla sla-warn">⏱ SLA: 1d restante</span><span class="card-prs">— PRs</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lane">
+          <div class="lane-header"><div class="lane-label"><div class="lane-dot" style="background:var(--yellow)"></div>Em Análise</div><span class="lane-count">1</span></div>
+          <div class="lane-cards">
+            <div class="card pri-alta" onclick="showDetail()">
+              <div class="card-id">#ENV-040</div>
+              <div class="card-title">Migração de endpoint REST para novo padrão v2</div>
+              <div class="card-meta"><span class="badge badge-size">G</span><span class="badge badge-team">Pagamentos</span></div>
+              <div class="card-footer"><span class="card-sla sla-ok">✓ SLA: 2d restantes</span><span class="card-prs">— PRs</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lane">
+          <div class="lane-header"><div class="lane-label"><div class="lane-dot" style="background:var(--accent)"></div>Em Desenvolvimento</div><span class="lane-count">2</span></div>
+          <div class="lane-cards">
+            <div class="card pri-alta" onclick="showDetail()">
+              <div class="card-id">#ENV-038</div>
+              <div class="card-title">Integração MongoDB — índices de performance</div>
+              <div class="card-meta"><span class="badge badge-size">M</span><span class="badge badge-team">Crédito</span></div>
+              <div class="card-footer"><span class="card-sla sla-ok">2 PRs abertos</span><span class="card-prs">2 PRs</span></div>
+            </div>
+            <div class="card pri-media" onclick="showDetail()">
+              <div class="card-id">#ENV-037</div>
+              <div class="card-title">Novo tópico Kafka para eventos de fraude</div>
+              <div class="card-meta"><span class="badge badge-size">M</span><span class="badge badge-team">Prevenção</span></div>
+              <div class="card-footer"><span class="card-sla sla-ok">Em andamento</span><span class="card-prs">1 PR</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lane">
+          <div class="lane-header"><div class="lane-label"><div class="lane-dot" style="background:var(--yellow)"></div>Ag. Revisão PR</div><span class="lane-count">1</span></div>
+          <div class="lane-cards">
+            <div class="card pri-alta" onclick="showDetail()">
+              <div class="card-id">#ENV-036</div>
+              <div class="card-title">Refactor autenticação JWT no API Gateway</div>
+              <div class="card-meta"><span class="badge badge-size">G</span><span class="badge badge-team">Segurança</span></div>
+              <div class="card-footer"><span class="card-sla sla-warn">⏱ SLA: 2d restantes</span><span class="card-prs">3 PRs</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lane">
+          <div class="lane-header"><div class="lane-label"><div class="lane-dot" style="background:var(--yellow)"></div>Em Revisão PR</div><span class="lane-count">1</span></div>
+          <div class="lane-cards">
+            <div class="card pri-media" onclick="showDetail()">
+              <div class="card-id">#ENV-033</div>
+              <div class="card-title">Novo relatório de conciliação financeira</div>
+              <div class="card-meta"><span class="badge badge-size">M</span><span class="badge badge-team">Financeiro</span></div>
+              <div class="card-footer"><span class="card-sla sla-ok">✓ SLA: 3d restantes</span><span class="card-prs">1 PR</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lane">
+          <div class="lane-header"><div class="lane-label"><div class="lane-dot" style="background:var(--purple)"></div>Ag. Homolog</div><span class="lane-count">1</span></div>
+          <div class="lane-cards">
+            <div class="card pri-media" onclick="showDetail()">
+              <div class="card-id">#ENV-032</div>
+              <div class="card-title">Ajuste schema MongoDB — produto Consórcio</div>
+              <div class="card-meta"><span class="badge badge-size">P</span><span class="badge badge-team">Consórcio</span></div>
+              <div class="card-footer"><span class="card-sla sla-ok">PRs merged</span><span class="card-prs">2 PRs</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lane">
+          <div class="lane-header"><div class="lane-label"><div class="lane-dot" style="background:var(--purple)"></div>Em Homolog</div><span class="lane-count">2</span></div>
+          <div class="lane-cards">
+            <div class="card pri-alta" onclick="showDetail()">
+              <div class="card-id">#ENV-031</div>
+              <div class="card-title">Pipeline de dados — produto Seguros</div>
+              <div class="card-meta"><span class="badge badge-size">G</span><span class="badge badge-team">Seguros</span></div>
+              <div class="card-footer"><span class="card-sla sla-ok">Release v2.4.1</span><span class="card-prs">4 PRs</span></div>
+            </div>
+            <div class="card pri-media" onclick="showDetail()">
+              <div class="card-id">#ENV-029</div>
+              <div class="card-title">Correção timeout consumer Kafka Pix</div>
+              <div class="card-meta"><span class="badge badge-size">P</span><span class="badge badge-team">Pix</span></div>
+              <div class="card-footer"><span class="card-sla sla-ok">Release v2.4.1</span><span class="card-prs">1 PR</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lane">
+          <div class="lane-header"><div class="lane-label"><div class="lane-dot" style="background:var(--green)"></div>Ag. Implantação</div><span class="lane-count">1</span></div>
+          <div class="lane-cards">
+            <div class="card pri-media" onclick="showDetail()">
+              <div class="card-id">#ENV-027</div>
+              <div class="card-title">Novo campo score de risco — produto Crédito</div>
+              <div class="card-meta"><span class="badge badge-size">M</span><span class="badge badge-team">Crédito</span></div>
+              <div class="card-footer"><span class="card-sla sla-ok">📅 18/03 · v2.3.9</span><span class="card-prs">2 PRs</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lane">
+          <div class="lane-header"><div class="lane-label"><div class="lane-dot" style="background:var(--border2)"></div>Implantado</div><span class="lane-count">2</span></div>
+          <div class="lane-cards">
+            <div class="card pri-baixa" style="opacity:.5" onclick="showDetail()">
+              <div class="card-id">#ENV-025</div>
+              <div class="card-title">Ajuste de charset UTF-8 no MongoDB</div>
+              <div class="card-meta"><span class="badge badge-size">P</span><span class="badge badge-team">Dados</span></div>
+              <div class="card-footer"><span class="card-sla" style="color:var(--text3)">✓ 05/03/2025</span><span class="card-prs">1 PR</span></div>
+            </div>
+            <div class="card pri-media" style="opacity:.5" onclick="showDetail()">
+              <div class="card-id">#ENV-024</div>
+              <div class="card-title">Feature flag para produto Consórcio</div>
+              <div class="card-meta"><span class="badge badge-size">P</span><span class="badge badge-team">Consórcio</span></div>
+              <div class="card-footer"><span class="card-sla" style="color:var(--text3)">✓ 01/03/2025</span><span class="card-prs">1 PR</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lane">
+          <div class="lane-header"><div class="lane-label"><div class="lane-dot" style="background:var(--red)"></div>Cancelado</div><span class="lane-count">1</span></div>
+          <div class="lane-cards">
+            <div class="card pri-alta" style="opacity:.45" onclick="showDetail()">
+              <div class="card-id">#ENV-023</div>
+              <div class="card-title">Integração legada com sistema externo descontinuado</div>
+              <div class="card-meta"><span class="badge badge-size">G</span><span class="badge badge-team">Integração</span></div>
+              <div class="card-footer"><span class="card-sla" style="color:var(--red)">✕ Cancelado</span><span class="card-prs">— PRs</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════════════ DETALHE -->
+    <div class="screen" id="screen-detail">
+      <div class="detail-wrap">
+        <div class="detail-main">
+          <button class="detail-back" onclick="showScreen('esteira')">← Voltar à esteira</button>
+
+          <div class="detail-head">
+            <div class="detail-id">#ENV-038 · Criado em 28/02/2025 por Rafael Souza</div>
+            <div class="detail-title-text">Integração MongoDB — criação de índices de performance</div>
+            <div class="detail-badges">
+              <span class="status-badge st-em-dev">EM DESENVOLVIMENTO</span>
+              <span class="badge badge-size">M</span>
+              <span class="badge badge-team">Time Crédito</span>
+              <span class="badge" style="background:rgba(247,90,90,.12);color:var(--red)">ALTA</span>
+            </div>
+          </div>
+
+          <div class="section-box">
+            <div class="section-label">Ações Disponíveis</div>
+            <div class="action-row">
+              <button class="btn-action btn-approve" onclick="openModal('ag-rev-pr')">Solicitar Revisão de PRs</button>
+              <button class="btn-action btn-request" onclick="openModal('pedir-ajuste')">Pedir Ajustes</button>
+              <button class="btn-action btn-cancel-act" onclick="openModal('cancelar-env')">Cancelar</button>
+            </div>
+          </div>
+
+          <div class="section-box">
+            <div class="section-label">Descrição</div>
+            <div class="desc-text">Criação de índices compostos nas coleções de contratos e parcelas para melhorar a performance das queries de consulta de crédito. As queries atuais estão realizando full collection scan, causando timeouts em horários de pico.</div>
+          </div>
+
+          <div class="section-box">
+            <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              Pull Requests (2)
+              <button class="btn-action btn-info" style="padding:4px 10px;font-size:11px" onclick="openModal('novo-pr')">+ Adicionar PR</button>
+            </div>
+            <div class="pr-item" onclick="openModal('pr-detail-1')">
+              <div class="pr-dot pr-dot-revisao"></div>
+              <div class="pr-info">
+                <div class="pr-repo">api-credito-ms · PR #142</div>
+                <div class="pr-desc">feat: adicionar índices em contratos e parcelas</div>
+              </div>
+              <div class="pr-right">
+                <span class="pr-status-tag pr-st-revisao">EM REVISÃO</span>
+              </div>
+            </div>
+            <div class="pr-item" onclick="openModal('pr-detail-2')">
+              <div class="pr-dot pr-dot-aberto"></div>
+              <div class="pr-info">
+                <div class="pr-repo">credito-migration-scripts · PR #38</div>
+                <div class="pr-desc">migration: script de criação dos índices em prod</div>
+              </div>
+              <div class="pr-right">
+                <span class="pr-status-tag pr-st-aberto">ABERTO</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-box">
+            <div class="section-label">Histórico de Status</div>
+            <div class="timeline">
+              <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-done"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status">Rascunho</div><div class="tl-meta">27/02/2025 16:40 · Rafael Souza</div></div></div>
+              <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-done"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status">Aguardando Aprovação</div><div class="tl-meta">28/02/2025 09:14 · Rafael Souza</div></div></div>
+              <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-done"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status">Em Análise</div><div class="tl-meta">28/02/2025 11:30 · João Mantenedor</div><div class="tl-obs">Necessário detalhar quais coleções serão afetadas e estimativa de tamanho dos índices.</div></div></div>
+              <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-done"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status">Aprovado</div><div class="tl-meta">01/03/2025 14:22 · João Mantenedor</div><div class="tl-obs">Escopo aprovado. Atenção ao rollback plan para os scripts de migration.</div></div></div>
+              <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-current"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status" style="color:var(--accent2)">Em Desenvolvimento</div><div class="tl-meta">03/03/2025 09:00 · Rafael Souza</div></div></div>
+              <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-pending"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status" style="color:var(--text3)">Aguardando Revisão de PRs</div><div class="tl-meta" style="color:var(--text3)">Pendente</div></div></div>
+              <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-pending"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status" style="color:var(--text3)">Em Revisão de PRs</div><div class="tl-meta" style="color:var(--text3)">Pendente</div></div></div>
+              <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-pending"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status" style="color:var(--text3)">Aguardando Homologação</div><div class="tl-meta" style="color:var(--text3)">Pendente</div></div></div>
+              <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-pending"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status" style="color:var(--text3)">Em Homologação</div><div class="tl-meta" style="color:var(--text3)">Pendente</div></div></div>
+              <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-pending"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status" style="color:var(--text3)">Aguardando Implantação</div><div class="tl-meta" style="color:var(--text3)">Pendente</div></div></div>
+              <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-pending"></div></div><div class="tl-content"><div class="tl-status" style="color:var(--text3)">Implantado</div><div class="tl-meta" style="color:var(--text3)">Pendente</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-side">
+          <div class="info-box">
+            <div class="section-label" style="margin-bottom:13px">Informações</div>
+            <div class="info-row"><span class="info-key">Time Contribuidor</span><span class="info-val accent">Time Crédito</span></div>
+            <div class="info-row"><span class="info-key">Usuário Contribuidor</span><span class="info-val">Rafael Souza</span></div>
+            <div class="info-row"><span class="info-key">Time Mantenedor</span><span class="info-val accent">Time Plataforma</span></div>
+            <div class="info-row"><span class="info-key">Usuário Mantenedor</span><span class="info-val">João Mantenedor</span></div>
+            <div class="divider"></div>
+            <div class="info-row"><span class="info-key">Prioridade</span><span class="info-val" style="color:var(--red)">Alta</span></div>
+            <div class="info-row"><span class="info-key">Complexidade</span><span class="info-val">Médio (M)</span></div>
+            <div class="divider"></div>
+            <div class="info-row"><span class="info-key">Data Criação</span><span class="info-val">28/02/2025</span></div>
+            <div class="info-row"><span class="info-key">Previsão Implantação</span><span class="info-val accent">28/03/2025</span></div>
+            <div class="info-row" style="margin-bottom:0"><span class="info-key">Data Encerramento</span><span class="info-val" style="color:var(--text3)">—</span></div>
+          </div>
+
+          <div class="info-box">
+            <div class="section-label" style="margin-bottom:9px">SLA — Aprovação</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:6px">✓ Concluído em 2d 5h</div>
+            <div class="sla-meter"><div class="sla-fill sla-green-fill" style="width:100%"></div></div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:5px">Prazo: 3 dias</div>
+          </div>
+
+          <div class="info-box">
+            <div class="section-label" style="margin-bottom:9px">SLA — Revisão de PRs</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:6px">Não iniciado</div>
+            <div class="sla-meter"><div class="sla-fill sla-green-fill" style="width:0%"></div></div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:5px">Prazo: 5 dias</div>
+          </div>
+
+          <div class="info-box">
+            <div class="section-label" style="margin-bottom:9px">Release</div>
+            <div style="font-family:var(--mono);font-size:14px;color:var(--accent2);font-weight:600">v2.4.2</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px">Planejada · 28/03/2025</div>
+          </div>
+
+          <div class="info-box">
+            <div class="section-label" style="margin-bottom:9px">Repositórios</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--accent2);margin-bottom:7px;cursor:pointer;display:flex;justify-content:space-between">api-credito-ms<span>→</span></div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--accent2);cursor:pointer;display:flex;justify-content:space-between">credito-migration-scripts<span>→</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════ RELEASES -->
+    <div class="screen" id="screen-releases">
+      <div class="page-header">
+        <span class="page-title">Releases</span>
+        <button class="btn-new" style="font-size:12px;padding:6px 12px">+ Nova Release</button>
+      </div>
+      <div class="releases-wrap" style="padding-top:16px">
+        <div class="releases-grid">
+          <div class="release-card">
+            <div class="release-ver">v2.4.1</div>
+            <div class="release-date">Homolog desde 08/03/2025 · Implantação: 18/03/2025</div>
+            <div class="release-envs">
+              <div class="release-env-item">ENV-031 — Pipeline de dados Seguros</div>
+              <div class="release-env-item">ENV-029 — Correção timeout Kafka Pix</div>
+            </div>
+            <span class="release-status rs-homolog">EM HOMOLOG</span>
+          </div>
+          <div class="release-card">
+            <div class="release-ver">v2.4.2</div>
+            <div class="release-date">Planejada para 28/03/2025</div>
+            <div class="release-envs">
+              <div class="release-env-item">ENV-038 — Índices MongoDB Crédito</div>
+              <div class="release-env-item">ENV-036 — Refactor JWT API Gateway</div>
+              <div class="release-env-item">ENV-033 — Relatório conciliação</div>
+            </div>
+            <span class="release-status rs-planejada">PLANEJADA</span>
+          </div>
+          <div class="release-card" style="opacity:.6">
+            <div class="release-ver">v2.3.9</div>
+            <div class="release-date">Implantada em 05/03/2025</div>
+            <div class="release-envs">
+              <div class="release-env-item">ENV-027 — Score risco Crédito</div>
+              <div class="release-env-item">ENV-025 — Charset UTF-8 MongoDB</div>
+              <div class="release-env-item">ENV-024 — Feature flag Consórcio</div>
+            </div>
+            <span class="release-status rs-implantada">IMPLANTADA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ MODAL: NOVO ENVOLVIMENTO -->
+<div class="modal-overlay" id="modal-novo-env">
+  <div class="modal">
+    <div class="modal-title">NOVO ENVOLVIMENTO<button class="modal-close" onclick="closeModal('novo-env')">×</button></div>
+    <div class="form-group">
+      <label class="form-label">Título</label>
+      <input class="form-input" type="text" placeholder="Descreva brevemente a necessidade..." maxlength="50" oninput="updateCount(this,'cc1')">
+      <div class="char-count" id="cc1">0 / 50</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição</label>
+      <textarea class="form-textarea" placeholder="Detalhe o que precisa ser feito, motivação e impacto esperado..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Time Contribuidor</label><input class="form-input" type="text" placeholder="Ex: Time Crédito"></div>
+      <div class="form-group"><label class="form-label">Usuário Contribuidor</label><input class="form-input" type="text" placeholder="Nome do responsável"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Prioridade</label><select class="form-select"><option>Baixa</option><option selected>Média</option><option>Alta</option></select></div>
+      <div class="form-group"><label class="form-label">Complexidade</label><select class="form-select"><option>P — Pequeno</option><option selected>M — Médio</option><option>G — Grande</option></select></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Previsão de Implantação</label>
+      <input class="form-input" type="date">
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel-form" onclick="closeModal('novo-env')">Cancelar</button>
+      <button class="btn-submit ghost" onclick="closeModal('novo-env')">Salvar Rascunho</button>
+      <button class="btn-submit green" onclick="closeModal('novo-env')">Abrir Envolvimento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: ADICIONAR PR -->
+<div class="modal-overlay" id="modal-novo-pr">
+  <div class="modal modal-sm">
+    <div class="modal-title">ADICIONAR PULL REQUEST<button class="modal-close" onclick="closeModal('novo-pr')">×</button></div>
+    <div class="form-group">
+      <label class="form-label">Repositório</label>
+      <select class="form-select"><option>api-credito-ms</option><option>credito-migration-scripts</option><option>api-gateway-core</option><option>kafka-consumers-ms</option><option>data-pipeline-ms</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">ID do PR no Repositório</label>
+      <input class="form-input" type="text" placeholder="Ex: 142">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição</label>
+      <input class="form-input" type="text" placeholder="Breve descrição do que foi implementado">
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel-form" onclick="closeModal('novo-pr')">Cancelar</button>
+      <button class="btn-submit" onclick="closeModal('novo-pr')">Adicionar PR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: DETALHE PR 1 (Em Revisão) -->
+<div class="modal-overlay" id="modal-pr-detail-1">
+  <div class="modal">
+    <div class="modal-title">PULL REQUEST · api-credito-ms #142<button class="modal-close" onclick="closeModal('pr-detail-1')">×</button></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div class="pr-dot pr-dot-revisao"></div>
+      <div style="font-size:15px;font-weight:600;flex:1">feat: adicionar índices em contratos e parcelas</div>
+      <span class="pr-status-tag pr-st-revisao">EM REVISÃO</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-bottom:4px">
+      <div class="info-row" style="margin:0"><span class="info-key">Repositório</span><span class="info-val accent">api-credito-ms</span></div>
+      <div class="info-row" style="margin:0"><span class="info-key">PR no Repositório</span><span class="info-val">#142</span></div>
+      <div class="info-row" style="margin:0"><span class="info-key">Envolvimento</span><span class="info-val">#ENV-038</span></div>
+      <div class="info-row" style="margin:0"><span class="info-key">Código Implantação</span><span class="info-val" style="color:var(--text3)">—</span></div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-label">Histórico de Status</div>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-done"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status">Aberto</div><div class="tl-meta">05/03/2025 14:10 · Rafael Souza</div></div></div>
+      <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-current"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status" style="color:var(--yellow)">Em Revisão</div><div class="tl-meta">07/03/2025 09:30 · João Mantenedor</div><div class="tl-obs">Revisando a estratégia de índice composto. Verificar se o índice de parcelas precisa cobrir também o campo status.</div></div></div>
+      <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-pending"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-status" style="color:var(--text3)">Aprovado / Aguardando Ajustes</div><div class="tl-meta" style="color:var(--text3)">Pendente</div></div></div>
+      <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-pending"></div></div><div class="tl-content"><div class="tl-status" style="color:var(--text3)">Merged</div><div class="tl-meta" style="color:var(--text3)">Pendente</div></div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-label" style="margin-bottom:10px">Ações</div>
+    <div class="action-row">
+      <button class="btn-action btn-approve" onclick="closeModal('pr-detail-1')">Aprovar PR</button>
+      <button class="btn-action btn-request" onclick="openModal('ajuste-pr')">Solicitar Ajustes</button>
+      <button class="btn-action btn-info" onclick="closeModal('pr-detail-1')">Mergear</button>
+      <button class="btn-action btn-cancel-act" onclick="closeModal('pr-detail-1')">Rejeitar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: DETALHE PR 2 (Aberto) -->
+<div class="modal-overlay" id="modal-pr-detail-2">
+  <div class="modal">
+    <div class="modal-title">PULL REQUEST · credito-migration-scripts #38<button class="modal-close" onclick="closeModal('pr-detail-2')">×</button></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div class="pr-dot pr-dot-aberto"></div>
+      <div style="font-size:15px;font-weight:600;flex:1">migration: script de criação dos índices em prod</div>
+      <span class="pr-status-tag pr-st-aberto">ABERTO</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-bottom:4px">
+      <div class="info-row" style="margin:0"><span class="info-key">Repositório</span><span class="info-val accent">credito-migration-scripts</span></div>
+      <div class="info-row" style="margin:0"><span class="info-key">PR no Repositório</span><span class="info-val">#38</span></div>
+      <div class="info-row" style="margin:0"><span class="info-key">Envolvimento</span><span class="info-val">#ENV-038</span></div>
+      <div class="info-row" style="margin:0"><span class="info-key">Código Implantação</span><span class="info-val" style="color:var(--text3)">—</span></div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-label">Histórico de Status</div>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot tl-dot-current"></div></div><div class="tl-content"><div class="tl-status" style="color:var(--green)">Aberto</div><div class="tl-meta">06/03/2025 10:22 · Rafael Souza</div></div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-label" style="margin-bottom:10px">Ações</div>
+    <div class="action-row">
+      <button class="btn-action btn-approve" onclick="closeModal('pr-detail-2')">Aprovar PR</button>
+      <button class="btn-action btn-request" onclick="closeModal('pr-detail-2')">Solicitar Ajustes</button>
+      <button class="btn-action btn-cancel-act" onclick="closeModal('pr-detail-2')">Rejeitar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: SOLICITAR AJUSTE PR -->
+<div class="modal-overlay" id="modal-ajuste-pr">
+  <div class="modal modal-sm">
+    <div class="modal-title">SOLICITAR AJUSTES — PR #142<button class="modal-close" onclick="closeModal('ajuste-pr')">×</button></div>
+    <div class="form-group">
+      <label class="form-label">Observação</label>
+      <textarea class="form-textarea" placeholder="Descreva os ajustes necessários..."></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel-form" onclick="closeModal('ajuste-pr')">Cancelar</button>
+      <button class="btn-submit" onclick="closeModal('ajuste-pr')">Enviar Solicitação</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: SOLICITAR REVISÃO DE PRs -->
+<div class="modal-overlay" id="modal-ag-rev-pr">
+  <div class="modal modal-sm">
+    <div class="modal-title">SOLICITAR REVISÃO DE PRs<button class="modal-close" onclick="closeModal('ag-rev-pr')">×</button></div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+      O envolvimento será movido para <strong style="color:var(--yellow)">Aguardando Revisão de PRs</strong>. O time mantenedor terá <strong style="color:var(--text)">5 dias</strong> para avaliar os pull requests.
+    </div>
+    <div class="form-group">
+      <label class="form-label">Observação (opcional)</label>
+      <textarea class="form-textarea" style="min-height:60px" placeholder="Alguma informação relevante para a revisão?"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel-form" onclick="closeModal('ag-rev-pr')">Cancelar</button>
+      <button class="btn-submit green" onclick="closeModal('ag-rev-pr')">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: PEDIR AJUSTES NO ENVOLVIMENTO -->
+<div class="modal-overlay" id="modal-pedir-ajuste">
+  <div class="modal modal-sm">
+    <div class="modal-title">PEDIR AJUSTES — ENV-038<button class="modal-close" onclick="closeModal('pedir-ajuste')">×</button></div>
+    <div class="form-group">
+      <label class="form-label">Observação</label>
+      <textarea class="form-textarea" placeholder="Descreva os ajustes necessários no escopo ou implementação..."></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel-form" onclick="closeModal('pedir-ajuste')">Cancelar</button>
+      <button class="btn-submit" onclick="closeModal('pedir-ajuste')">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: CANCELAR ENVOLVIMENTO -->
+<div class="modal-overlay" id="modal-cancelar-env">
+  <div class="modal modal-sm">
+    <div class="modal-title">CANCELAR ENVOLVIMENTO<button class="modal-close" onclick="closeModal('cancelar-env')">×</button></div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+      Esta ação irá mover o envolvimento para o status <strong style="color:var(--red)">Cancelado</strong>. Os pull requests associados não serão mergeados.
+    </div>
+    <div class="form-group">
+      <label class="form-label">Motivo do Cancelamento</label>
+      <textarea class="form-textarea" placeholder="Descreva o motivo do cancelamento..."></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel-form" onclick="closeModal('cancelar-env')">Voltar</button>
+      <button class="btn-action btn-cancel-act" style="border-radius:8px;padding:8px 18px" onclick="closeModal('cancelar-env')">Confirmar Cancelamento</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    const btns = document.querySelectorAll('.nav-btn');
+    if (name === 'esteira') btns[0].classList.add('active');
+    if (name === 'releases') btns[1].classList.add('active');
+  }
+  function showDetail() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-detail').classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  }
+  function openModal(name) {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+    const el = document.getElementById('modal-' + name);
+    if (el) el.classList.add('open');
+  }
+  function closeModal(name) {
+    const el = document.getElementById('modal-' + name);
+    if (el) el.classList.remove('open');
+  }
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
+  });
+  function updateCount(el, id) {
+    document.getElementById(id).textContent = el.value.length + ' / 50';
+  }
+  function toggleFilter(el) { el.classList.toggle('on'); }
+</script>
+</body>
+</html>
