@@ -1,7 +1,4 @@
 # draft
 
 
-## TODOs
-
-[ ] copy viewers (markdown, json e csv)
-
+[todos](todo.md)
