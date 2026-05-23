@@ -1,0 +1,5 @@
+- copiar viewers
+- criar backend kotlin + mongo
+- criar pagina de visualizacao prp
+- criar pagina de criacao prp (via id)
+- puxar aws services tips
