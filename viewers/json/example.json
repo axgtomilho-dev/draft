@@ -1,0 +1,81 @@
+{
+  "projectId": "proj-9832A",
+  "name": "Project Apollo",
+  "status": "in_progress",
+  "isActive": true,
+  "budget": null,
+  "projectManager": {
+    "firstName": "Elena",
+    "lastName": "Rodriguez",
+    "email": "e.rodriguez@company.com",
+    "isActive": true
+  },
+  "teams": {
+    "frontend": [
+      {
+        "developerId": "dev-101",
+        "name": "Sarah Chen",
+        "roles": ["Lead", "UI Specialist"],
+        "isRemote": true,
+        "skills": ["React", "TypeScript", "Tailwind"]
+      },
+      {
+        "developerId": "dev-102",
+        "name": "Marcus Johnson",
+        "roles": ["Junior Developer"],
+        "isRemote": false,
+        "skills": ["JavaScript", "HTML", "CSS"]
+      }
+    ],
+    "backend": [
+      {
+        "developerId": "dev-201",
+        "name": "David Kim",
+        "roles": ["Systems Architect"],
+        "isRemote": true,
+        "skills": ["Node.js", "Python", "PostgreSQL"]
+      }
+    ]
+  },
+  "milestones": [
+    {
+      "phase": "Alpha Release",
+      "dueDate": "2026-06-15T17:00:00Z",
+      "completed": false,
+      "tasks": [
+        {
+          "taskId": "tsk-001",
+          "description": "Initialize database schema",
+          "priority": "high",
+          "hoursLogged": 24
+        },
+        {
+          "taskId": "tsk-002",
+          "description": "Develop user authentication API",
+          "priority": "critical",
+          "hoursLogged": 45
+        }
+      ]
+    },
+    {
+      "phase": "Beta Release",
+      "dueDate": "2026-09-01T17:00:00Z",
+      "completed": false,
+      "tasks": [
+        {
+          "taskId": "tsk-003",
+          "description": "Frontend dashboard integration",
+          "priority": "medium",
+          "hoursLogged": 0
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "repository": "https://github.com",
+    "ci_cd_pipeline": {
+      "autoDeploy": false,
+      "allowedBranches": ["main", "develop"]
+    }
+  }
+}
