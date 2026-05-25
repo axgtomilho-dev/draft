@@ -10,7 +10,7 @@ Regras obrigatórias:
 - Não percorra discos adicionais, outras partições, unidades de rede, compartilhamentos ou outras pastas do sistema.
 
 2. Segurança:
-- Não modificar, mover, renomear ou excluir arquivos.
+- Não modificar, mover, renomear ou excluir arquivos (unicas exceções: estrutura.md e estrutura-prompt.md)
 - Não executar programas.
 - Não criar arquivos temporários fora do arquivo final solicitado.
 - Não alterar permissões.
