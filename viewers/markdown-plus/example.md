@@ -9,8 +9,6 @@ src/main/kotlin/com/empresa/app/
 ├── order/
 │   ├── Order.kt                    # JPA entity = domain object
 │   ├── OrderStatus.kt              # domain enum
-├── user/
-│   └── ...
 ├── shared/
 │   ├── exception/
 └── Application.kt
@@ -115,3 +113,177 @@ class Order(
 ```
 
 ---
+
+
+```mermaid
+mindmap
+  root((AWS))
+
+    Cloud_Concepts
+      Regiões
+      Availability_Zones
+      Edge_Locations
+      Local_Zones
+      Shared_Responsibility_Model
+      Well_Architected_Framework
+      Well_Architected_Tool
+
+    Segurança_e_Identidade
+      IAM
+        Users
+        Roles
+        Policies
+        Identity_Center
+      Cognito
+      Directory_Service
+      KMS
+      Secrets_Manager
+      Macie
+      Shield
+      WAF
+      GuardDuty
+      Inspector
+      Security_Hub
+      CloudHSM
+      ACM
+      Artifact
+      CloudTrail
+      Config
+      VPC_Flow_Logs
+
+    Computação
+      EC2
+        On_Demand
+        Spot
+        Reserved
+        Dedicated
+        Savings_Plans
+      Lambda
+      Elastic_Beanstalk
+      App_Runner
+      Fargate
+      Auto_Scaling
+      Batch
+      Outposts
+
+    Containers
+      ECS
+      EKS
+      ECR
+
+    Rede
+      VPC
+        Public_Subnet
+        Private_Subnet
+        Route_Tables
+        Security_Groups
+        ACLs
+        NAT_Gateway
+        Internet_Gateway
+      Direct_Connect
+      Transit_Gateway
+      VPN
+      Global_Accelerator
+      API_Gateway
+
+      Load_Balancers
+        ELB
+        ALB
+        NLB
+        Gateway_Load_Balancer
+
+      DNS_CDN
+        Route53
+        CloudFront
+
+    Armazenamento
+      S3
+        Intelligent_Tiering
+        Select
+        Glacier
+        Glacier_Deep_Archive
+      EBS
+      EFS
+      FSx
+      Storage_Gateway
+      DataSync
+
+    Banco_de_Dados
+      RDS
+      Aurora
+      DynamoDB
+      DocumentDB
+      Neptune
+      ElastiCache
+      Redshift
+
+    Analytics
+      Athena
+      Glue
+      EMR
+      Kinesis
+      OpenSearch
+      Lake_Formation
+      QuickSight
+
+    Integração
+      SQS
+      SNS
+      SES
+      EventBridge
+      Step_Functions
+      MQ
+
+    DevOps
+      CloudFormation
+      CDK
+      CodeCommit
+      CodeBuild
+      CodeDeploy
+      CodePipeline
+      CodeStar
+      Systems_Manager
+      CloudShell
+      Amplify
+      CloudWatch
+      XRay
+
+    Migração
+      Application_Migration_Service
+      SMS
+      DMS
+      DataSync
+
+    Machine_Learning
+      SageMaker
+      Rekognition
+      Textract
+      Transcribe
+      Comprehend
+      Forecast
+      Personalize
+      Polly
+      Lex
+
+    Governança
+      Organizations
+      SCPs
+      Control_Tower
+      RAM
+
+    Custos
+      Cost_Explorer
+      Budgets
+      Pricing_Calculator
+      Compute_Optimizer
+      Trusted_Advisor
+      Health_Dashboard
+      Support_Plans
+```
+
+---
+
+
+
+---
+
